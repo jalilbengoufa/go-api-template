@@ -1,22 +1,37 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.22.7-alpine AS build
+FROM golang:1.27-alpine AS build
 
-ARG COMMIT=not_generated
+ARG VERSION=dev
+ARG TARGETOS
+ARG TARGETARCH
 
-WORKDIR /app
+WORKDIR /src
 
-COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    go mod download -x
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-X main.commitHash=$COMMIT" -o /api .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/api ./cmd/api
 
-FROM scratch
+FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=build /api /api
+WORKDIR /
 
-EXPOSE 80
+COPY --from=build /out/api /api
+
+USER nonroot:nonroot
+
+EXPOSE 8080
+
+ENV APP_PORT=8080 \
+    APP_ENV=production \
+    LOG_FORMAT=json
 
 ENTRYPOINT ["/api"]
