@@ -125,6 +125,14 @@ Migrations in `migrations/` are applied automatically by the Compose Postgres se
 
 `make docker-build` produces a static, non-root image on `distroless/static`.
 
+CI publishes the image to the GitHub Container Registry on every push to `main`, tagged `latest` and `sha-<short-sha>`:
+
+```bash
+docker pull ghcr.io/jalilbengoufa/go-api-template:latest
+```
+
+Pull requests build the image to verify it but do not push it.
+
 Point your platform's health check at `/health/ready`, which verifies the database, and its liveness probe at `/health/live`, which does not. Supply `PG_PASSWORD`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` as secrets rather than environment literals, and set `TRUSTED_PROXIES` to the load balancer's CIDRs so rate limiting keys off the real client IP.
 
 ## License
