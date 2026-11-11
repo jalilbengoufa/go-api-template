@@ -142,6 +142,8 @@ docker pull ghcr.io/jalilbengoufa/go-api-template:latest
 
 Pull requests build the image to verify it but do not push it.
 
+The image has a Docker `HEALTHCHECK` that runs `/api healthcheck`, which calls `/health/ready` on the local port and exits non-zero unless it returns 200 (distroless has no shell or curl). Orchestrators and updaters such as WUD use it to detect and roll back a release that never becomes ready.
+
 Point your platform's health check at `/health/ready`, which verifies the database, and its liveness probe at `/health/live`, which does not. Supply `PG_PASSWORD`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` as secrets rather than environment literals, and set `TRUSTED_PROXIES` to the load balancer's CIDRs so rate limiting keys off the real client IP.
 
 ## License
