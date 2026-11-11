@@ -119,7 +119,16 @@ make lint     # golangci-lint
 make build    # static binary in bin/
 ```
 
-Migrations in `migrations/` are applied automatically by the Compose Postgres service on first boot. Schema is managed by SQL rather than GORM auto-migration so that production changes are reviewable and ordered.
+Migrations in `migrations/` are embedded in the binary and applied by [goose](https://github.com/pressly/goose) when the API starts, before it serves requests. Applied versions are recorded in `goose_db_version`, and a Postgres advisory lock keeps two instances from migrating at once. If a migration fails, the API exits instead of starting on a half-migrated schema. Schema is managed by SQL rather than GORM auto-migration so that production changes are reviewable and ordered.
+
+Add a migration as the next numbered file, for example `migrations/0002_add_tags.sql`:
+
+```sql
+-- +goose Up
+ALTER TABLE resources ADD COLUMN tags text[] NOT NULL DEFAULT '{}';
+```
+
+Each file runs in a transaction; do not add `BEGIN`/`COMMIT`. For statements that cannot run in a transaction, such as `CREATE INDEX CONCURRENTLY`, add `-- +goose NO TRANSACTION` at the top. Never edit a migration that has been deployed; add a new one instead. Down migrations are optional and not used: fix forward.
 
 ## Deployment
 

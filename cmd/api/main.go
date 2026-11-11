@@ -14,6 +14,7 @@ import (
 	"github.com/jalilbengoufa/go-api-template/internal/repository"
 	"github.com/jalilbengoufa/go-api-template/internal/server"
 	"github.com/jalilbengoufa/go-api-template/internal/service"
+	"github.com/jalilbengoufa/go-api-template/migrations"
 )
 
 var version = "dev"
@@ -49,6 +50,10 @@ func run() error {
 			logger.Error("failed to close database", slog.Any("error", err))
 		}
 	}()
+
+	if err := db.Migrate(ctx, migrations.FS, logger); err != nil {
+		return fmt.Errorf("migrate database: %w", err)
+	}
 
 	resourceService := service.NewResourceService(repository.NewResourceRepository(db.DB))
 

@@ -1,5 +1,4 @@
-BEGIN;
-
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS resources (
@@ -18,5 +17,3 @@ CREATE INDEX IF NOT EXISTS resources_owner_id_idx
 CREATE INDEX IF NOT EXISTS resources_created_at_idx
     ON resources (created_at DESC, id DESC)
     WHERE deleted_at IS NULL;
-
-COMMIT;

@@ -28,6 +28,6 @@ Lint runs golangci-lint v2.15.0 with 44 linters and must report zero issues. Tes
 - Use `ContextTimeoutWithConfig`, never `TimeoutWithConfig` — the latter is deprecated upstream for data races.
 - `e.IPExtractor` is `ExtractIPDirect()` unless `TRUSTED_PROXIES` is set, so `X-Forwarded-For` cannot spoof the rate-limiter key (CVE-2026-118653). Never widen this to `0.0.0.0/0`.
 - A wrong method on an existing route returns **404, not 405**. Echo registers a catch-all when a route group carries middleware, which takes precedence over its own method-not-allowed response. Group-level auth was chosen over the stricter status code; changing it moves auth off the group.
-- Schema changes go in `migrations/*.sql`. GORM `AutoMigrate` is intentionally unused so production changes stay reviewable and ordered.
+- Schema changes go in `migrations/NNNN_name.sql` with a `-- +goose Up` header and no `BEGIN`/`COMMIT` (goose wraps each file in a transaction). They are embedded and applied at startup by `database.Migrate`. GORM `AutoMigrate` is intentionally unused so production changes stay reviewable and ordered. Never edit a deployed migration.
 - `internal/repository` and `internal/database` have no unit tests by design — they are only meaningfully tested against a real database, and no container-based test dependency has been added. Do not add one without asking.
 - `Resource` is a placeholder entity, not a real domain concept. Replace or copy it as a set of four files (`domain`, `repository`, `service`, `handler`) and register the handler in `internal/server/server.go`.
